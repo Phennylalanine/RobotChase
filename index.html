@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141A45">
+<title>Robo Chase</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Enter code -->
+<section class="screen stu" id="join" hidden>
+  <div class="stu-center">
+    <div id="heroBot"></div>
+    <h1>Robo Chase</h1>
+    <div class="field">
+      <label for="codeIn">Game code</label>
+      <input id="codeIn" class="code-in" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="000000">
+    </div>
+    <button class="btn go" id="codeBtn">Enter</button>
+    <p class="err" id="codeErr" hidden></p>
+    <a class="link-btn" href="host.html">I'm the teacher</a>
+  </div>
+</section>
+
+<!-- Name + avatar -->
+<section class="screen stu" id="profile" hidden>
+  <div class="stu-center">
+    <div class="me" id="preview"></div>
+    <div class="field">
+      <label for="nameIn">Your name</label>
+      <input id="nameIn" maxlength="16" autocomplete="off" placeholder="Nickname">
+    </div>
+    <div class="picker" id="colorPicker" role="group" aria-label="Choose your color"></div>
+    <div class="gear-row" id="gearPicker" role="group" aria-label="Choose your hat"></div>
+    <button class="btn go" id="joinBtn">Join the crew</button>
+    <p class="err" id="joinErr" hidden></p>
+  </div>
+</section>
+
+<!-- Waiting -->
+<section class="screen stu" id="wait" hidden>
+  <div class="stu-center">
+    <div class="me" id="waitMe"></div>
+    <p class="big-msg" id="waitMsg">You're in!</p>
+    <p class="small-msg" id="waitSub">Watch the big screen.</p>
+  </div>
+</section>
+
+<!-- Answer (self-paced) -->
+<section class="screen stu" id="answer" hidden>
+  <div class="stu-q">
+    <div class="goalbar">
+      <span>Your 5 <span class="dots" id="aDots"></span></span>
+      <span>Crew done <b id="aCrew">–</b></span>
+      <span>Score <b id="aScore">0</b></span>
+      <span class="tleft" id="aTime"></span>
+    </div>
+    <p class="done-note" id="aDone" hidden>You got your 5! Keep answering for points while the crew catches up.</p>
+    <h2 class="qprompt" id="aText"></h2>
+    <div id="aImg" style="display:grid"></div>
+    <div class="answers" id="aButtons"></div>
+  </div>
+  <div class="feedback" id="fb" hidden>
+    <p class="big-msg" id="fbMsg"></p>
+    <p class="gain" id="fbGain"></p>
+    <p class="was" id="fbWas"></p>
+    <div class="found" id="fbFound"></div>
+  </div>
+</section>
+
+<!-- Bonus: Missile Dodge -->
+<section class="screen stu" id="bonusStu" hidden>
+  <div class="stu-bonus">
+    <div class="qhead"><span id="sbRound">Bonus</span><span class="lives-tag inline">❤ <b id="sbLives">0</b></span><span class="tleft" id="sbTime"></span></div>
+    <div class="arena-wrap" id="sbWrap">
+      <canvas id="sbArena"></canvas>
+      <div class="arena-banner" id="sbBanner" hidden></div>
+    </div>
+    <p class="small-msg" id="sbMsg">Tap where you want your pod to fly.</p>
+  </div>
+</section>
+
+<!-- End -->
+<section class="screen stu" id="end" hidden>
+  <div class="stu-center">
+    <div class="me" id="endMe"></div>
+    <p class="big-msg" id="endMsg"></p>
+    <div class="scoreline"><span>Score <b id="endScore">0</b></span><span>Place <b id="endRank">–</b></span></div>
+  </div>
+</section>
+
+<!-- Game over / removed -->
+<section class="screen stu" id="gone" hidden>
+  <div class="stu-center">
+    <div id="goneBot"></div>
+    <p class="big-msg" id="goneMsg">This game has ended.</p>
+    <button class="btn" id="goneBtn">Join another game</button>
+  </div>
+</section>
+
+<script src="firebase-config.js"></script>
+<script src="common.js"></script>
+<script src="bonus.js"></script>
+<script src="student.js"></script>
+</body>
+</html>
