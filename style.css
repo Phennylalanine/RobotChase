@@ -628,3 +628,7 @@ body.has-banner .stu-q { min-height: calc(100vh - 108px); }
 
 .lives-pick { margin-left: 14px; color: var(--muted); font-weight: 600; }
 .lives-pick select { margin-left: 6px; background: var(--hull); color: var(--star); border: 2px solid var(--panel-hi); border-radius: var(--r-small); padding: .3em .5em; }
+
+.crew-card .nright { font-family: var(--display); font-weight: 400; font-size: 1.3rem; color: var(--mint); min-width: 1.4ch; text-align: right; }
+.plan-hint { color: var(--hazard); font-weight: 600; margin-left: 10px; }
+.play-count > b { font-variant-numeric: tabular-nums; }

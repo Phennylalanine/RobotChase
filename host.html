@@ -79,6 +79,19 @@
     <div>
       <span class="count-pill" id="playerCount">0 players</span>
       <button class="link-btn" id="addBots">Add 5 test players</button>
+      <label class="lives-pick">Game length
+        <select id="gameMins">
+          <option value="10">10 min</option>
+          <option value="15">15 min</option>
+          <option value="20" selected>20 min</option>
+          <option value="25">25 min</option>
+          <option value="30">30 min</option>
+          <option value="40">40 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+        </select>
+      </label>
+      <span class="plan-hint" id="planHint"></span>
       <label class="lives-pick">Crew lives
         <select id="livesPer">
           <option value="1">1 per student</option>
@@ -98,10 +111,10 @@
 <section class="screen play" id="play" hidden>
   <div class="play-top">
     <div>
-      <h2 id="pGoal">Everyone get 5 right to reach the escape pods!</h2>
-      <p class="bonus-sub"><b id="pChapter"></b> Answer on your own device. Done already? Keep going for points.</p>
+      <h2 id="pGoal">Answer right to stay ahead of the robot!</h2>
+      <p class="bonus-sub"><b id="pChapter"></b> Answer on your own device. Every correct answer pushes the crew further from the robot.</p>
     </div>
-    <div class="play-count"><b id="pDone">0</b><span>of <b id="pTotal">0</b> done</span></div>
+    <div class="play-count"><b id="pTimer">0:00</b><span id="pTimerLabel">until the escape pods</span></div>
   </div>
   <div class="track-wrap live" id="track">
     <div class="shields" id="shields"></div>
@@ -118,10 +131,10 @@
   <div class="crew-board" id="pBoard"></div>
   <div class="play-foot">
     <span class="play-join">Join with code <b id="pCode"></b></span>
-    <span class="play-hint">Click a name to remove someone who isn't playing.</span>
+    <span class="play-hint">Numbers show correct answers this chapter. Click a name to remove someone who isn't playing.</span>
     <div style="display:flex; gap:10px; flex-wrap:wrap">
       <button class="btn quiet small" id="pEnd">End game</button>
-      <button class="btn small" id="pForce">Start bonus now</button>
+      <button class="btn small" id="pForce">Skip to the bonus</button>
     </div>
   </div>
 </section>

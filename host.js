@@ -289,6 +289,14 @@
     showScreen("lobby");
   }
 
+  function renderPlan() {
+    const mins = +$("#gameMins").value || 20;
+    const per = RACE.sectionSecs(1, mins * 60);
+    $("#planHint").textContent = `≈ ${Math.round(per / 6) / 10} min of quiz per chapter`;
+  }
+  $("#gameMins").onchange = renderPlan;
+  renderPlan();
+
   function renderLobby(fresh = new Set()) {
     const ids = Object.keys(players).sort((a, b) => (players[a].joinedAt || 0) - (players[b].joinedAt || 0));
     $("#playerCount").textContent = `${ids.length} player${ids.length === 1 ? "" : "s"}`;
@@ -315,12 +323,12 @@
 
   $("#backToSetup").onclick = async () => { unsubs.forEach(u => u()); unsubs = []; await DB.remove(room()); code = null; showScreen("setup"); };
 
-  // ─────────────── Self-paced chase ───────────────
+  // ─────────────── Self-paced, timed chase ───────────────
   // Questions go to every device; students answer at their own pace and this
-  // screen marks each answer. The crew moves with the class's progress toward
-  // 5 correct each; the bonus starts when everyone has their 5.
-  const GOAL = RACE.GOAL;
-  let processed = {}, legTime = 150, lastTick = 0, playing = false, tickCount = 0, packKey = "";
+  // screen marks each answer. Each quiz section runs for a planned time (from
+  // the teacher's game length); correct answers keep the robot back.
+  let processed = {}, lastTick = 0, playing = false, tickCount = 0, packKey = "";
+  let gameDeadline = 0, secStart = 0, secLen = 0, pendingBoost = 0;
   const newScore = () => ({ score: 0, streak: 0, leg: 0, answered: 0, right: 0 });
 
   // Stop every running timer and loop; keep only the players listener.
@@ -335,6 +343,7 @@
   $("#startGame").onclick = async () => {
     const ids = Object.keys(players);
     const per = +$("#livesPer").value || 1;
+    gameDeadline = DB.now() + (+$("#gameMins").value || 20) * 60000;
     race = { ...RACE.start(), lives: ids.length * per, maxLives: ids.length * per };
     scores = {}; processed = {};
     ids.forEach(id => scores[id] = newScore());
@@ -348,7 +357,11 @@
 
   async function startChase() {
     clearTimers();
-    legTime = RACE.legTime(quiz.questions);
+    // share out the time that's left between this chapter and the ones after it
+    secLen = RACE.sectionSecs(race.leg, (gameDeadline - DB.now()) / 1000);
+    secStart = DB.now();
+    race.secLen = secLen; race.endsAt = secStart + secLen * 1000; race.gap = RACE.START_GAP;
+    pendingBoost = 0;
     lastTick = DB.now(); tickCount = 0; packKey = ""; shieldsBefore = race.shields;
     playing = true;
     $("#pCode").textContent = code;
@@ -376,7 +389,6 @@
   function grade(subs) {
     if (!playing) return;
     const upd = {};
-    let doneNow = 0;
     for (const [id, s] of Object.entries(subs)) {
       if (!players[id] || !s || typeof s.n !== "number" || s.n <= (processed[id] ?? -1)) continue;
       processed[id] = s.n;
@@ -387,47 +399,35 @@
       const frac = Math.min(1, Math.max(0, ((s.at || 0) - (s.shownAt || 0)) / (q.time * 1000)));
       const gained = ok ? Math.round(500 + 500 * (1 - frac)) + Math.min(sc.streak, 3) * 50 : 0;
       sc.answered++;
-      if (ok) { sc.right++; sc.leg++; sc.streak++; if (sc.leg === GOAL) doneNow++; } else sc.streak = 0;
+      if (ok) { sc.right++; sc.leg++; sc.streak++; pendingBoost += RACE.boost(Object.keys(players).length, quiz.questions); } else sc.streak = 0;
       sc.score += gained;
       const items = chapter().items;
       upd["results/" + id] = { n: s.n, correct: ok, right: q.correct, gained, item: ok && items ? items[(sc.leg - 1) % items.length] : null };
       upd["scores/" + id] = sc;
     }
     if (Object.keys(upd).length) DB.update(room(), upd);
-    if (doneNow) sfx.join();
     renderBoard();
-  }
-
-  function classProgress() {
-    const ids = Object.keys(players);
-    const leg = id => Math.min(GOAL, scores[id]?.leg || 0);
-    return {
-      f: ids.length ? ids.reduce((a, id) => a + leg(id), 0) / (ids.length * GOAL) : 0,
-      done: ids.filter(id => leg(id) >= GOAL).length,
-      total: ids.length
-    };
   }
 
   function tickChase() {
     if (!playing) return;
     const now = DB.now(), dt = (now - lastTick) / 1000;
     lastTick = now;
-    const p = classProgress();
-    race.crew = 15 + 85 * p.f;
-    race.done = p.done; race.total = p.total;
+    const f = Math.min(1, (now - secStart) / (secLen * 1000));
+    race.crew = 15 + 85 * f;                                   // the clock carries the crew to the pods
+    race.gap = Math.min(RACE.MAX_GAP, race.gap - RACE.DRIFT * dt + pendingBoost);
+    pendingBoost = 0;
     let caught = false;
-    if (race.crew < 100) {
-      race.robot = Math.min(97, race.robot + 95 / legTime * dt);
-      if (race.robot >= race.crew - 2) {
-        caught = true;
-        if (race.shields > 0) race.shields--; else race.lives = Math.max(0, race.lives - 1);
-        race.robot = Math.max(0, race.crew - 20);
-      }
+    if (race.gap <= 0 && f < 1) {
+      caught = true;
+      if (race.shields > 0) race.shields--; else race.lives = Math.max(0, race.lives - 1);
+      race.gap = RACE.RESET_GAP;
     }
+    race.robot = Math.max(0, race.crew - Math.max(0, race.gap));
     renderTrack(caught);
     if (++tickCount % 2 === 0 || caught) DB.set(room("race"), race);
     if (race.lives <= 0) { playing = false; return setTimeout(() => endGame(true), 2500); }
-    if (p.total && p.done >= p.total) reachPods();
+    if (f >= 1) reachPods();
   }
 
   async function reachPods() {
@@ -455,7 +455,7 @@
     }, 2200);
     setTimeout(startBonus, 4200);
   }
-  $("#pForce").onclick = () => { if (playing && confirm("Start the bonus round now, before everyone has 5 right?")) reachPods(); };
+  $("#pForce").onclick = () => { if (playing && confirm("End this quiz section now and start the bonus round?")) reachPods(); };
   $("#pEnd").onclick = () => { if (confirm("End the game and show the results?")) { playing = false; endGame(); } };
 
   // ── chase drawing ──
@@ -489,8 +489,7 @@
     });
     $("#shields").innerHTML = [0, 1, 2].map(k => `<i class="${k < race.shields ? "" : "gone"}" title="Shield"></i>`).join("");
     $("#livesTag").innerHTML = `❤ <b>${race.lives}</b>`;
-    $("#pDone").textContent = race.done;
-    $("#pTotal").textContent = race.total;
+    $("#pTimer").textContent = fmtTime((race.endsAt - DB.now()) / 1000);
     if (caught) {
       sfx.alarm();
       const z = $("#zap"); z.classList.remove("on"); void z.offsetWidth; z.classList.add("on");
@@ -509,18 +508,14 @@
   }
 
   function renderBoard() {
-    const ids = Object.keys(players).sort((a, b) =>
-      Math.min(GOAL, scores[a]?.leg || 0) - Math.min(GOAL, scores[b]?.leg || 0) || (players[a].name || "").localeCompare(players[b].name || ""));
-    $("#pBoard").innerHTML = ids.map(id => {
-      const n = Math.min(GOAL, scores[id]?.leg || 0);
-      return `<button class="crew-card ${n >= GOAL ? "done" : ""}" data-kick="${id}" title="Click to remove ${esc(players[id].name)}">
-        ${crewSVG(players[id].color, players[id].gear)}<span class="nm">${esc(players[id].name)}</span>
-        <span class="dots">${Array.from({ length: GOAL }, (_, k) => `<i class="${k < n ? "on" : ""}"></i>`).join("")}</span></button>`;
-    }).join("");
+    const right = id => scores[id]?.leg || 0;
+    const ids = Object.keys(players).sort((a, b) => right(a) - right(b) || (players[a].name || "").localeCompare(players[b].name || ""));
+    $("#pBoard").innerHTML = ids.map(id => `<button class="crew-card" data-kick="${id}" title="Click to remove ${esc(players[id].name)}">
+        ${crewSVG(players[id].color, players[id].gear)}<span class="nm">${esc(players[id].name)}</span><b class="nright">${right(id)}</b></button>`).join("");
   }
   $("#pBoard").addEventListener("click", e => {
     const k = e.target.closest("[data-kick]");
-    if (k && confirm(`Remove ${players[k.dataset.kick]?.name || "this player"} from the game? They won't be needed for the 5.`)) {
+    if (k && confirm(`Remove ${players[k.dataset.kick]?.name || "this player"} from the game?`)) {
       DB.remove(room("players/" + k.dataset.kick));
       DB.remove(room("scores/" + k.dataset.kick));
     }

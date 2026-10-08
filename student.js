@@ -76,7 +76,6 @@
   let qs = null, myScore = null, raceInfo = null, n = 0, awaiting = -1, playOn = false;
   let qTimer = null, fbTimer = null, waitTimer = null, curQ = -1, shownAt = 0;
   const imgCache = {};
-  const GOAL = RACE.GOAL;
 
   function enterRoom() {
     unsubs.forEach(u => u()); unsubs = [];
@@ -214,6 +213,7 @@
     const tickFn = () => {
       const left = Math.max(0, Math.ceil(q.time - (DB.now() - shownAt) / 1000));
       $("#aTime").textContent = left;
+      updateGoal();
       if (left <= 0) submit(-1);
     };
     tickFn(); qTimer = setInterval(tickFn, 250);
@@ -263,10 +263,8 @@
   }
 
   function updateGoal() {
-    const got = Math.min(GOAL, myScore?.leg || 0);
-    $("#aDots").innerHTML = Array.from({ length: GOAL }, (_, k) => `<i class="${k < got ? "on" : ""}"></i>`).join("");
-    $("#aDone").hidden = got < GOAL;
-    $("#aCrew").textContent = raceInfo ? `${raceInfo.done || 0}/${raceInfo.total || 0}` : "–";
+    $("#aRight").textContent = myScore?.leg || 0;
+    $("#aPods").textContent = raceInfo && raceInfo.endsAt ? fmtTime((raceInfo.endsAt - DB.now()) / 1000) : "–";
     $("#aScore").textContent = myScore ? myScore.score : 0;
   }
 
