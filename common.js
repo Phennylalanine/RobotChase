@@ -213,14 +213,14 @@
   window.CHAPTERS = [
     {
       key: "station", title: "Chapter 1: Escape the space station!",
-      goal: "Everyone get 5 right to reach the escape pods!",
+      goal: "Answer right to stay ahead of the robot until the escape pods are ready!",
       items: null, itemLabel: "",
-      done: "Everyone got 5! To the escape pods!",
-      wait: ["Everyone got 5!", "The crew is diving into the escape pods. Get ready to fly!"]
+      done: "The escape pods are ready! Everyone in!",
+      wait: ["Pods ready!", "The crew is diving into the escape pods. Get ready to fly!"]
     },
     {
       key: "planet", title: "Chapter 2: Crash landing!",
-      goal: "Everyone get 5 right to collect the parts and fix the pod!",
+      goal: "Answer right to keep the robot back while we collect the parts!",
       items: ["gear", "wrench", "battery", "nut", "chip"], itemLabel: "Parts",
       done: "All parts collected! Pod fixed, blast off!",
       wait: ["Pod fixed!", "Blasting off into space. Get ready to fly!"],
@@ -228,7 +228,7 @@
     },
     {
       key: "moon", title: "Chapter 3: Out of fuel!",
-      goal: "Everyone get 5 right to fill the fuel tanks!",
+      goal: "Answer right to keep the robot back while we grab the fuel!",
       items: ["fuel", "fuel", "fuel", "fuel", "fuel"], itemLabel: "Fuel",
       done: "Fuel tanks full! Blast off for home!",
       wait: ["Tanks full!", "Blasting off for home. One last bonus round!"],
@@ -250,20 +250,44 @@
   window.answerIcon = i => `<svg class="ans-icon" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${ICONS[i % ICONS.length]}</svg>`;
 
   // ───────────────────────── Race rules ─────────────────────────
-  // Self-paced chase: every student needs GOAL correct answers. The crew's
-  // position is the class's average progress toward that goal, so the crew
-  // only reaches the escape pods when everyone has their 5. The robot walks
-  // forward with time. Catches use up a shield, then cost a life.
+  // Timed chase: each quiz section lasts a set time, worked out from the
+  // teacher's game length. The crew runs toward the escape pods as the clock
+  // counts down. The robot creeps closer all the time and every correct answer
+  // pushes the crew further ahead. A catch uses a shield, then costs a life.
+  const SCENE_SECS = { crash: 9, fuel: 10, home: 8.5 };
   window.RACE = {
-    GOAL: 5,
-    start() { return { crew: 15, robot: 0, shields: 3, leg: 1, escapes: 0, lives: 0, maxLives: 0, done: 0, total: 0 }; },
-    newLeg(r) { return { ...r, crew: 15, robot: 0, shields: 3, leg: r.leg + 1, done: 0 }; },
-    // seconds the robot takes to cross the track: enough for a steady class, tight for a slow one
-    legTime(questions) {
+    DRIFT: 0.8,                 // track units per second the robot gains
+    START_GAP: 20, MAX_GAP: 34, RESET_GAP: 18,
+    start() { return { crew: 15, robot: 0, gap: this.START_GAP, shields: 3, leg: 1, escapes: 0, lives: 0, maxLives: 0, endsAt: 0, secLen: 0 }; },
+    newLeg(r) { return { ...r, crew: 15, robot: 0, gap: this.START_GAP, shields: 3, leg: r.leg + 1, endsAt: 0, secLen: 0 }; },
+    secsPerAnswer(questions) {
       const avg = questions.reduce((a, q) => a + q.time, 0) / Math.max(1, questions.length);
-      return this.GOAL / 0.6 * (avg * 0.45 + 2.5) * 1.6;
+      return avg * 0.45 + 2;
+    },
+    // How far one correct answer pushes the crew: sized so a class getting
+    // about 65% right holds the robot off, whatever the class size.
+    boost(players, questions) {
+      const b = this.DRIFT * this.secsPerAnswer(questions) / (0.65 * Math.max(1, players));
+      return Math.max(.3, Math.min(8, b));
+    },
+    // Seconds of everything that isn't quiz, from chapter k to the end:
+    // blast-off, bonus game, the countdown after it, and the next cutscene.
+    overheadFrom(k) {
+      let s = 0;
+      for (let c = k; c <= CHAPTERS.length; c++) {
+        const bonus = BONUS.roundsFor(c).reduce((a, R) => a + 3.5 + R.waves * (R.warn / 1000 + .9) + (R.waves - 1) * 1.9 + 2.2, 0);
+        const next = c < CHAPTERS.length ? SCENE_SECS[CHAPTERS[c].scene] : SCENE_SECS.home;
+        s += 4.2 + bonus + 10 + next;
+      }
+      return s;
+    },
+    // Quiz seconds for chapter k, sharing out what's left of the game evenly.
+    sectionSecs(k, secondsLeft) {
+      const left = CHAPTERS.length - k + 1;
+      return Math.max(45, Math.round((secondsLeft - this.overheadFrom(k)) / left));
     }
   };
+  window.fmtTime = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
 
   // Crew art as an <img> for drawing on a canvas (cached).
   const imgCache = {};

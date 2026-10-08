@@ -61,22 +61,26 @@ Your last quiz is remembered in that browser. **Save quiz with pictures** downlo
 
 ## How the game works
 
-The game is a three-chapter story. Each chapter is a self-paced quiz chase followed by a Missile Dodge bonus game, and the next chapter starts automatically after each bonus.
+The game is a three-chapter story. Each chapter is a timed, self-paced quiz chase followed by a Missile Dodge bonus game, and the next chapter starts automatically after each bonus.
 
 1. **Escape the space station.** Run to the escape pods → Bonus 1.
-2. **Crash landing.** A cutscene shows the pod crashing onto a strange planet with the robot following. The crew collects 5 mechanical parts to fix the pod, then blasts off → Bonus 2.
-3. **Out of fuel.** The engine sputters and the pod drifts down onto an icy moon. The crew grabs 5 fuel cells and blasts off for home → Bonus 3, with moving asteroids.
+2. **Crash landing.** A cutscene shows the pod crashing onto a strange planet with the robot following. The crew collects mechanical parts to fix the pod, then blasts off → Bonus 2.
+3. **Out of fuel.** The engine sputters and the pod drifts down onto an icy moon. The crew grabs fuel cells and blasts off for home → Bonus 3, with moving asteroids.
 4. **Ending.** The crew flies home while the robot drifts off into deep space.
 
-**The chase (self-paced)**
+**Game length**
+- In the waiting room, choose how long the whole game should last (10 to 60 minutes). The waiting room shows how much quiz time each chapter will get.
+- The game subtracts the time for blast-offs, bonus games and cutscenes (about 3 minutes in total) and shares the rest evenly between the three chapters. A 20-minute game gives about 5½ minutes of quiz per chapter.
+- At the start of each chapter it re-plans with the time that's left, so if you skip ahead or something runs long, the game still finishes close to on time.
+
+**The chase (self-paced, timed)**
 - Every student answers on their own device at their own pace, in their own shuffled order. Questions repeat in a new order if they run out.
-- Every student needs **5 correct answers** per chapter. The projector shows each student's progress as five dots, with the students who still need help listed first.
-- The crew moves forward as the class gets closer to everyone having 5, picking up parts or fuel cells along the way. The chapter ends when every student has their 5.
+- A countdown on the projector (and on each device) shows when the escape pods will be ready. The crew runs toward the pods as the clock counts down, picking up parts or fuel cells along the way. When the time is up, the crew boards the pod and the bonus starts.
+- The robot creeps closer all the time, and every correct answer pushes the crew further ahead. The push is sized to the class, so a class getting about two-thirds right keeps the robot back. If the robot catches the crew, a shield zaps it back (3 shields per chapter). With no shields left, a catch costs a life.
 - In chapters 2 and 3, each correct answer shows the student the part or fuel they found, in Japanese (for example 「ギアを みつけた！」).
-- Students who already have 5 keep answering for points while the rest of the crew catches up.
-- The robot moves forward with time. If it catches the crew, a shield zaps it back (3 shields per chapter). With no shields left, a catch costs a life.
+- The projector shows each student's correct answers this chapter, with the lowest first, so you can see who might need help.
 - Each question's time limit from your file still applies. Faster correct answers earn more points, with a small bonus for streaks.
-- **Start bonus now** skips ahead if someone is stuck. Clicking a student's name removes them (for example, a student who left).
+- **Skip to the bonus** ends the current quiz section early. Clicking a student's name removes them (for example, a student who left).
 
 **Bonus: Missile Dodge**
 - Every student flies their own pod on their device: tap or drag where to go, or use the arrow keys on a laptop. On an upright phone the arena turns sideways to fill the screen.
